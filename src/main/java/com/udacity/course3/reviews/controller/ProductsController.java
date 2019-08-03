@@ -60,7 +60,7 @@ public class ProductsController {
      *
      * @return The list of products.
      */
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public List<?> listProducts() {
         return productRepository.findAll();
     }
