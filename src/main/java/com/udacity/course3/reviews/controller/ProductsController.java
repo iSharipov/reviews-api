@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 /**
  * Spring REST controller for working with product entity.
  */
@@ -30,14 +32,16 @@ public class ProductsController {
 
     /**
      * Creates a product.
-     * <p>
-     * 1. Accept product as argument. Use {@link RequestBody} annotation.
-     * 2. Save product.
+     *
+     * @param product product
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
-    public void createProduct(@RequestBody Product product) {
-        productRepository.save(product);
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        if (isEmpty(product.getName()) || isEmpty(product.getDescription())) {
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(null);
+        }
+        return ResponseEntity.ok(productRepository.save(product));
     }
 
     /**
@@ -47,7 +51,7 @@ public class ProductsController {
      * @return The product if found, or a 404 not found.
      */
     @RequestMapping(value = "/{id}")
-    public ResponseEntity<?> findById(@PathVariable("id") Integer id) {
+    public ResponseEntity<Product> findById(@PathVariable("id") Integer id) {
         Optional<Product> productOptional = productRepository.findById(id);
         if (productOptional.isPresent()) {
             return ResponseEntity.ok(productOptional.get());
