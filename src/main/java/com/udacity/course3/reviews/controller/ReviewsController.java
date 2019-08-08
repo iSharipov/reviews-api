@@ -2,7 +2,9 @@ package com.udacity.course3.reviews.controller;
 
 import com.udacity.course3.reviews.entity.Product;
 import com.udacity.course3.reviews.entity.Review;
+import com.udacity.course3.reviews.entity.ReviewDocument;
 import com.udacity.course3.reviews.repository.ProductRepository;
+import com.udacity.course3.reviews.repository.ReviewDocumentRepository;
 import com.udacity.course3.reviews.repository.ReviewRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,10 +29,12 @@ public class ReviewsController {
     // TODO: Wire JPA repositories here
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final ReviewDocumentRepository reviewDocumentRepository;
 
-    public ReviewsController(ReviewRepository reviewRepository, ProductRepository productRepository) {
+    public ReviewsController(ReviewRepository reviewRepository, ProductRepository productRepository, ReviewDocumentRepository reviewDocumentRepository) {
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
+        this.reviewDocumentRepository = reviewDocumentRepository;
     }
 
     /**
@@ -46,7 +51,12 @@ public class ReviewsController {
         Optional<Product> productOptional = productRepository.findById(productId);
         if (productOptional.isPresent()) {
             review.setProduct(productOptional.get());
-            return ResponseEntity.ok(reviewRepository.save(review));
+            review = reviewRepository.save(review);
+            ReviewDocument reviewDocument = new ReviewDocument();
+            reviewDocument.setId(review.getId());
+            reviewDocument.setReview(review);
+            reviewDocumentRepository.save(reviewDocument);
+            return ResponseEntity.ok(review);
         }
         return ResponseEntity.notFound().build();
     }
@@ -58,10 +68,14 @@ public class ReviewsController {
      * @return The list of reviews.
      */
     @RequestMapping(value = "/reviews/products/{productId}", method = RequestMethod.GET)
-    public ResponseEntity<List<Review>> listReviewsForProduct(@PathVariable("productId") Integer productId) {
+    public ResponseEntity<List<ReviewDocument>> listReviewsForProduct(@PathVariable("productId") Integer productId) {
         Optional<List<Review>> reviewsOptional = reviewRepository.findAllByProductId(productId);
         if (reviewsOptional.isPresent()) {
-            return ResponseEntity.ok(reviewsOptional.get());
+            List<ReviewDocument> reviewDocuments = new ArrayList<>();
+            for (Review review : reviewsOptional.get()) {
+                reviewDocumentRepository.findById(review.getId()).ifPresent(reviewDocuments::add);
+            }
+            return ResponseEntity.ok(reviewDocuments);
         }
         return ResponseEntity.notFound().build();
     }

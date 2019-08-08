@@ -2,7 +2,9 @@ package com.udacity.course3.reviews.controller;
 
 import com.udacity.course3.reviews.entity.Comment;
 import com.udacity.course3.reviews.entity.Review;
+import com.udacity.course3.reviews.entity.ReviewDocument;
 import com.udacity.course3.reviews.repository.CommentRepository;
+import com.udacity.course3.reviews.repository.ReviewDocumentRepository;
 import com.udacity.course3.reviews.repository.ReviewRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +29,12 @@ public class CommentsController {
     // TODO: Wire needed JPA repositories here
     private final ReviewRepository reviewRepository;
     private final CommentRepository commentRepository;
+    private final ReviewDocumentRepository reviewDocumentRepository;
 
-    public CommentsController(ReviewRepository reviewRepository, CommentRepository commentRepository) {
+    public CommentsController(ReviewRepository reviewRepository, CommentRepository commentRepository, ReviewDocumentRepository reviewDocumentRepository) {
         this.reviewRepository = reviewRepository;
         this.commentRepository = commentRepository;
+        this.reviewDocumentRepository = reviewDocumentRepository;
     }
 
     /**
@@ -44,7 +48,13 @@ public class CommentsController {
         if (reviewOptional.isPresent()) {
             if (!isEmpty(comment.getTitle())) {
                 comment.setReview(reviewOptional.get());
-                return ResponseEntity.ok(commentRepository.save(comment));
+                commentRepository.save(comment);
+                Optional<ReviewDocument> reviewDocumentOptional = reviewDocumentRepository.findById(reviewId);
+                if (reviewDocumentOptional.isPresent()) {
+                    reviewDocumentOptional.get().getComments().add(comment);
+                    reviewDocumentRepository.save(reviewDocumentOptional.get());
+                }
+                return ResponseEntity.ok(comment);
             }
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(null);
         }
