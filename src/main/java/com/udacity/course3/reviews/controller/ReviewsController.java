@@ -73,7 +73,7 @@ public class ReviewsController {
         if (reviewsOptional.isPresent()) {
             List<ReviewDocument> reviewDocuments = new ArrayList<>();
             for (Review review : reviewsOptional.get()) {
-                reviewDocumentRepository.findById(review.getId()).ifPresent(reviewDocuments::add);
+                reviewDocuments.add(reviewDocumentRepository.findById(review.getId()));
             }
             return ResponseEntity.ok(reviewDocuments);
         }

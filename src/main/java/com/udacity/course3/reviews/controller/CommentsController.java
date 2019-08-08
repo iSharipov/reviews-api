@@ -49,10 +49,10 @@ public class CommentsController {
             if (!isEmpty(comment.getTitle())) {
                 comment.setReview(reviewOptional.get());
                 commentRepository.save(comment);
-                Optional<ReviewDocument> reviewDocumentOptional = reviewDocumentRepository.findById(reviewId);
-                if (reviewDocumentOptional.isPresent()) {
-                    reviewDocumentOptional.get().getComments().add(comment);
-                    reviewDocumentRepository.save(reviewDocumentOptional.get());
+                ReviewDocument reviewDocument = reviewDocumentRepository.findById(reviewOptional.get().getId());
+                if (reviewDocument != null) {
+                    reviewDocument.getComments().add(comment);
+                    reviewDocumentRepository.save(reviewDocument);
                 }
                 return ResponseEntity.ok(comment);
             }
